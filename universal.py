@@ -128,9 +128,7 @@ def drivel(target_distance: float = 0, drive_max: float = 10, target_height: flo
             driving = False
         if -35 < lift_error and lift_error < 35:
             lifting = False
-            print("abbabbaaabbababfiunvienfknslscnsnvjosdncjdnojancjdsnvhfbvisjncojs")
 
-        print(driving, lifting)
         if not (driving or lifting):
             break
 
@@ -146,8 +144,10 @@ def rotate(target_degrees: float, max_voltage: float = 10, timeout: int = 7000, 
     while brain.timer.time(MSEC) - start_time < timeout:
         error = target_degrees + start_rotation - I.rotation()
         pid_output = Rotater.calculate(error)
-        if pid_output == "end":
+        if pid_output == "end" and -4.4 < error < 4.4:
             break
+        elif pid_output == "end":
+            pid_output = 0
         motor_voltage = max(-max_voltage, min(max_voltage, pid_output))
         for LM in [LM1, LM2, LM3]:
             LM.spin(FORWARD, motor_voltage, VOLT)
@@ -323,35 +323,47 @@ def autonomous():
         rotate(target_degrees=45, max_voltage=12, pause=0)
         drivel(target_distance=-24, drive_max=12)
     elif AUTON_SIDE == 2:
+        drivel(target_height=200)
         toggle(250)
-        drivel(target_distance=-13.5, drive_max=7, target_height=200)
+        drivel(target_distance=-13.5, drive_max=7, target_height=400)
         rotate(target_degrees=-90, max_voltage=8)
-        drivel(target_distance=11.5, drive_max=4, target_height=300, pause=0)
-        drivel(target_height=-150)
-        claw(250)
-        drivel(target_distance=-16.4, drive_max=8)
+        drivel(target_distance=12, drive_max=4, target_height=200, pause=0)
+        drivel(target_height=-350)
+        claw(250) # Pin 1 Placed
+        drivel(target_distance=-16.4, drive_max=7)
         rotate(target_degrees=-45)
-        drivel(target_distance=25.6, drive_max=5, target_height=-550, pause=0)
-        claw(250)
-        drivel(target_distance=7.4, drive_max=5, target_height=600)
+        drivel(target_distance=26.5, drive_max=5, target_height=-550, pause=0)
+        claw(250) # Pin 2 Grabbed
+        drivel(target_distance=6.5, drive_max=5, target_height=800)
         rotate(target_degrees=135, max_voltage=4, pause=0)
         drivel(target_distance=13.5, drive_max=6, target_height=500, pause=0)
-        drivel(target_height=-700)
-        claw()
-        drivel(target_distance=-16, target_height=-400, pause=0)
-        rotate(target_degrees=-45)
-        drivel(target_distance=27, drive_max=6, pause=0)
-        claw(300)
-        drivel(target_distance=7.5, drive_max=6, target_height=1000)
+        drivel(target_height=-900)
+        claw() # Pin 2 Placed
+        drivel(target_distance=-16.5, drive_max=6, target_height=-400, pause=0)
+        rotate(target_degrees=-45, max_voltage=6) # Revert to 45 if fixed
+        drivel(target_distance=26.5, drive_max=6, pause=0)
+        claw(300) # Pin 3 Grabbed
+        drivel(target_distance=7.5, drive_max=6, target_height=1200)
         rotate(target_degrees=135, max_voltage=4)
-        drivel(target_distance=15.5, drive_max=3, target_height=600)
-        claw()
+        drivel(target_distance=15.5, drive_max=3, target_height=550)
+        claw(500) # Pin 3 Placed
 
+        drivel(target_distance=-12, target_height=-550)
+        rotate(target_degrees=45)
+        drivel(target_distance=40, target_height=-1200)
+
+"""MATCH LOAD CODE""
         drivel(target_height=-500)
         drivel(target_distance=-9999, drive_max=5, target_height=-1000)
-        drivel(target_distance=6)
-        rotate(target_degrees=-90)
-        drivel(target_distance=12, pause=500)
+        drivel(target_distance=5)
+        rotate(target_degrees=-90, max_voltage=6)
+        drivel(target_distance=12, drive_max=6, pause=0)
+        drivel(target_distance=-1, drive_max=12, pause=0)
+        claw(300) # Match-load 1 Grabbed
+        drivel(target_distance=-12, drive_max=6, target_height=500)
+        rotate(target_degrees=90, max_voltage=8)
+        drivel(target_distance=30, drive_max=5, target_height=1000)
+"""
 
 
 def user_control():
@@ -370,11 +382,8 @@ def user_control():
 
 #----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-print("Code updated")
-sleep(3000)
-#toggle()
-#claw()
-drivel(target_height=200)
+toggle()
+claw()
 I.calibrate() #Calibrate Inertial sensor
 while I.is_calibrating():
     screen_status("Calibrating")
